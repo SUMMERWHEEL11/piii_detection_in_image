@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NEON PII SCANNER v4.0.0</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+    
+    :root {
+      --neon-pink: #ff2a6d;
+      --neon-blue: #05d9e8;
+      --neon-purple: #d300c5;
+      --neon-green: #00ff9d;
+      --neon-orange: #ff9d00;
+      --dark-bg: #0d0221;
+      --darker-bg: #050110;
+      --scanline: rgba(0, 255, 157, 0.05);
+      --glow: 0 0 10px;
+      --terminal-bg: rgba(10, 5, 30, 0.9);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background-color: var(--dark-bg);
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(255, 42, 109, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(5, 217, 232, 0.1) 0%, transparent 40%);
+      color: var(--neon-blue);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    /* Cyberpunk scanline effect */
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        to bottom,
+        transparent 95%,
+        var(--scanline) 95%
+      );
+      background-size: 100% 5px;
+      pointer-events: none;
+      z-index: 100;
+      animation: scanline 4s linear infinite;
+    }
+
+    @keyframes scanline {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(100vh); }
+    }
+
+    /* Glitch effect */
+    @keyframes glitch {
+      0% { text-shadow: var(--glow) var(--neon-blue), 0 0 20px var(--neon-pink); }
+      25% { text-shadow: var(--glow) var(--neon-purple), -2px 0 var(--neon-green); }
+      50% { text-shadow: var(--glow) var(--neon-green), 2px 0 var(--neon-pink); }
+      75% { text-shadow: var(--glow) var(--neon-pink), -2px 0 var(--neon-blue); }
+      100% { text-shadow: var(--glow) var(--neon-blue), 0 0 20px var(--neon-pink); }
+    }
+
+    .sidebar {
+      width: 250px;
+      background: linear-gradient(to bottom, #120229, #0a0118);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-right: 1px solid var(--neon-purple);
+      box-shadow: 0 0 20px var(--neon-purple);
+      z-index: 10;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, 
+        transparent 0%, 
+        rgba(255, 42, 109, 0.1) 25%,
+        transparent 50%,
+        rgba(5, 217, 232, 0.1) 75%,
+        transparent 100%
+      );
+      animation: sidebarScan 8s linear infinite;
+    }
+
+    @keyframes sidebarScan {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
+    }
+
+    .sidebar-header {
+      font-family: 'Orbitron', sans-serif;
+      color: var(--neon-pink);
+      text-align: center;
+      margin-bottom: 30px;
+      text-shadow: 0 0 10px var(--neon-pink);
+      letter-spacing: 2px;
+      font-size: 1.5rem;
+      animation: glitch 5s infinite alternate;
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar button,
+    .sidebar label.upload-label {
+      border: none;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+      background: rgba(5, 217, 232, 0.1);
+      color: var(--neon-blue);
+      border: 1px solid var(--neon-blue);
+      box-shadow: 0 0 10px rgba(5, 217, 232, 0.3);
+      z-index: 2;
+    }
+
+    .sidebar button::before,
+    .sidebar label.upload-label::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(5, 217, 232, 0.4),
+        transparent
+      );
+      transition: 0.5s;
+    }
+
+    .sidebar button:hover,
+    .sidebar label.upload-label:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 20px var(--neon-blue);
+    }
+
+    .sidebar button:hover::before,
+    .sidebar label.upload-label:hover::before {
+      left: 100%;
+    }
+
+    .encrypt {
+      color: var(--neon-green);
+      border-color: var(--neon-green);
+      box-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
+    }
+
+    .decrypt {
+      color: var(--neon-pink);
+      border-color: var(--neon-pink);
+      box-shadow: 0 0 10px rgba(255, 42, 109, 0.3);
+    }
+
+    .upload-label {
+      color: var(--neon-purple);
+      border-color: var(--neon-purple);
+      box-shadow: 0 0 10px rgba(211, 0, 197, 0.3);
+    }
+
+    .download {
+      color: var(--neon-blue);
+      border-color: var(--neon-blue);
+    }
+
+    .scan {
+      color: var(--neon-orange);
+      border-color: var(--neon-orange);
+      box-shadow: 0 0 10px rgba(255, 157, 0, 0.3);
+    }
+
+    .clear {
+      color: #ff3366;
+      border-color: #ff3366;
+      box-shadow: 0 0 10px rgba(255, 51, 102, 0.3);
+    }
+
+    .sidebar .auth {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      z-index: 2;
+    }
+
+    .auth button {
+      flex: 1;
+      margin: 5px;
+      padding: 10px;
+      font-size: 14px;
+      background: rgba(255, 42, 109, 0.1);
+      color: var(--neon-pink);
+      border: 1px solid var(--neon-pink);
+      box-shadow: 0 0 5px rgba(255, 42, 109, 0.3);
+    }
+
+    .main {
+      flex: 1;
+      position: relative;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      background: radial-gradient(circle at center, #1a0345 0%, #0d0221 70%);
+      overflow: hidden;
+    }
+
+    .scan-area {
+      position: relative;
+      width: 800px;
+      height: 600px;
+      border-radius: 5px;
+      border: 1px solid var(--neon-blue);
+      box-shadow: 
+        0 0 20px var(--neon-blue), 
+        inset 0 0 20px var(--neon-blue);
+      overflow: hidden;
+      background-color: black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #preview {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .scan-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .scan-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(to bottom, transparent, var(--neon-green), transparent);
+      box-shadow: 0 0 10px var(--neon-green);
+      animation: scan 3s ease-in-out infinite;
+    }
+
+    @keyframes scan {
+      0% { top: 0; }
+      50% { top: 100%; }
+      100% { top: 0; }
+    }
+
+    .chat-box {
+      position: absolute;
+      bottom: 80px;
+      left: 270px;
+      width: calc(100% - 290px);
+      display: flex;
+      justify-content: center;
+      z-index: 20;
+    }
+
+    .chat-box input {
+      flex: 1;
+      max-width: 800px;
+      padding: 15px 20px;
+      font-size: 16px;
+      border-radius: 5px 0 0 5px;
+      border: 1px solid var(--neon-purple);
+      background: rgba(13, 2, 33, 0.8);
+      color: var(--neon-green);
+      font-family: 'Rajdhani', sans-serif;
+      outline: none;
+      box-shadow: 0 0 10px rgba(211, 0, 197, 0.3);
+    }
+
+    .chat-box input::placeholder {
+      color: var(--neon-purple);
+      opacity: 0.7;
+    }
+
+    .chat-box button {
+      background: rgba(211, 0, 197, 0.2);
+      border: 1px solid var(--neon-purple);
+      border-left: none;
+      padding: 15px 20px;
+      border-radius: 0 5px 5px 0;
+      color: var(--neon-purple);
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .chat-box button:hover {
+      background: rgba(211, 0, 197, 0.4);
+      color: white;
+      box-shadow: 0 0 15px var(--neon-purple);
+    }
+
+    .spinner {
+      display: none;
+      margin: 20px;
+      border: 6px solid rgba(5, 217, 232, 0.1);
+      border-top: 6px solid var(--neon-blue);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      box-shadow: 0 0 10px var(--neon-blue);
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #resultText {
+      font-weight: bold;
+      color: var(--neon-green);
+      margin-top: 20px;
+      font-size: 1.2rem;
+      text-shadow: 0 0 5px var(--neon-green);
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 1px;
+      text-align: center;
+      max-width: 800px;
+      line-height: 1.5;
+      background: var(--terminal-bg);
+      padding: 15px;
+      border-radius: 5px;
+      border: 1px solid var(--neon-green);
+      box-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
+    }
+
+    #imageUpload {
+      display: none;
+    }
+
+    .help-button {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 42, 109, 0.2);
+      color: var(--neon-pink);
+      border: 1px solid var(--neon-pink);
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px rgba(255, 42, 109, 0.5);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .help-button:hover {
+      background: rgba(255, 42, 109, 0.4);
+      transform: scale(1.1);
+    }
+
+    /* Cyberpunk terminal-like corners */
+    .corner {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-style: solid;
+      border-color: var(--neon-blue);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .corner-tl {
+      top: 10px;
+      left: 10px;
+      border-width: 3px 0 0 3px;
+    }
+
+    .corner-tr {
+      top: 10px;
+      right: 10px;
+      border-width: 3px 3px 0 0;
+    }
+
+    .corner-bl {
+      bottom: 10px;
+      left: 10px;
+      border-width: 0 0 3px 3px;
+    }
+
+    .corner-br {
+      bottom: 10px;
+      right: 10px;
+      border-width: 0 3px 3px 0;
+    }
+
+    /* Cyberpunk status bars */
+    .status-bar {
+      position: absolute;
+      bottom: 20px;
+      left: 270px;
+      width: calc(100% - 290px);
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      color: var(--neon-blue);
+      text-shadow: 0 0 5px var(--neon-blue);
+      z-index: 20;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      padding: 5px 10px;
+      background: rgba(5, 217, 232, 0.1);
+      border-radius: 3px;
+      border: 1px solid var(--neon-blue);
+      box-shadow: 0 0 5px var(--neon-blue);
+    }
+
+    .status-item i {
+      margin-right: 5px;
+      color: var(--neon-green);
+    }
+
+    /* Cyberpunk binary rain effect */
+    .binary-rain {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+      z-index: -1;
+      opacity: 0.1;
+      pointer-events: none;
+    }
+
+    .binary-digit {
+      position: absolute;
+      color: var(--neon-green);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px;
+      text-shadow: 0 0 3px var(--neon-green);
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(100vh); }
+    }
+
+    /* PII detection highlights */
+    .pii-highlight {
+      position: absolute;
+      border: 2px solid var(--neon-pink);
+      box-shadow: 0 0 10px var(--neon-pink);
+      z-index: 15;
+      pointer-events: none;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.7; }
+      50% { opacity: 0.3; }
+      100% { opacity: 0.7; }
+    }
+
+    .pii-label {
+      position: absolute;
+      background: rgba(255, 42, 109, 0.8);
+      color: white;
+      padding: 3px 6px;
+      font-size: 12px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      border-radius: 3px;
+      z-index: 16;
+      pointer-events: none;
+      text-transform: uppercase;
+    }
+
+    /* Analysis terminal */
+    .analysis-terminal {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 800px;
+      background: var(--terminal-bg);
+      border: 1px solid var(--neon-green);
+      box-shadow: 0 0 15px var(--neon-green);
+      border-radius: 5px;
+      padding: 15px;
+      z-index: 30;
+      display: none;
+    }
+
+    .terminal-header {
+      font-family: 'Orbitron', sans-serif;
+      color: var(--neon-green);
+      margin-bottom: 10px;
+      text-shadow: 0 0 5px var(--neon-green);
+    }
+
+    .terminal-content {
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: 'Rajdhani', sans-serif;
+      color: var(--neon-blue);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .terminal-content div {
+      margin-bottom: 5px;
+    }
+
+    .terminal-content span {
+      color: var(--neon-pink);
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <!-- Binary rain background -->
+  <div class="binary-rain" id="binaryRain"></div>
+
+  <div class="sidebar">
+    <div class="sidebar-header">NEON PII SCANNER</div>
+    <div>
+      <button class="scan"><i class="fas fa-search"></i> SCAN</button>
+      <button class="encrypt"><i class="fas fa-lock"></i> ENCRYPT</button>
+      <button class="decrypt"><i class="fas fa-unlock"></i> DECRYPT</button>
+      <label for="imageUpload" class="upload-label"><i class="fas fa-upload"></i> UPLOAD</label>
+      <button class="download"><i class="fas fa-download"></i> DOWNLOAD</button>
+      <button class="clear"><i class="fas fa-eraser"></i> CLEAR</button>
+    </div>
+    <div class="auth">
+      <button><i class="fas fa-sign-in-alt"></i> LOG IN</button>
+      <button><i class="fas fa-user-plus"></i> SIGN UP</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Corner decorations -->
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+    
+    <!-- Analysis terminal -->
+    <div class="analysis-terminal" id="analysisTerminal">
+      <div class="terminal-header">DATA ANALYSIS TERMINAL</div>
+      <div class="terminal-content" id="terminalContent">
+        <!-- Analysis results will appear here -->
+      </div>
+    </div>
+    
+    <canvas id="resizeCanvas" width="800" height="600" style="display: none"></canvas>
+    
+    <div class="scan-area">
+      <img id="preview" src="" alt="Preview" />
+      <div class="scan-overlay">
+        <div class="scan-line"></div>
+      </div>
+    </div>
+    
+    <div class="spinner" id="loadingSpinner"></div>
+    <div id="resultText">UPLOAD DOCUMENT TO BEGIN SCAN</div>
+    <input type="file" accept="image/*" id="imageUpload" />
+  </div>
+
+  <div class="chat-box">
+    <input type="text" id="chatInput" placeholder="QUERY THE SYSTEM..." />
+    <button id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-item"><i class="fas fa-shield-alt"></i> SECURITY: ACTIVE</div>
+    <div class="status-item"><i class="fas fa-microchip"></i> SYSTEM: ONLINE</div>
+    <div class="status-item"><i class="fas fa-bolt"></i> POWER: 98%</div>
+    <div class="status-item"><i class="fas fa-clock"></i> 23:59:47</div>
+  </div>
+
+  <button class="help-button" title="Help">
+    <i class="fas fa-question"></i>
+  </button>
+
+  <script>
+    const imageUpload = document.getElementById('imageUpload');
+    const preview = document.getElementById('preview');
+    const resultText = document.getElementById('resultText');
+    const spinner = document.getElementById('loadingSpinner');
+    const canvas = document.getElementById('resizeCanvas');
+    const ctx = canvas.getContext('2d');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatInput = document.getElementById('chatInput');
+    const helpButton = document.querySelector('.help-button');
+    const binaryRain = document.getElementById('binaryRain');
+    const scanArea = document.querySelector('.scan-area');
+    const analysisTerminal = document.getElementById('analysisTerminal');
+    const terminalContent = document.getElementById('terminalContent');
+
+    // Create binary rain effect
+    function createBinaryRain() {
+      const digits = '01';
+      const columns = Math.floor(window.innerWidth / 20);
+      
+      for (let i = 0; i < columns; i++) {
+        const delay = Math.random() * 5;
+        const duration = 5 + Math.random() * 10;
+        const left = i * 20;
+        
+        for (let j = 0; j < 20; j++) {
+          const digit = document.createElement('div');
+          digit.className = 'binary-digit';
+          digit.textContent = digits.charAt(Math.floor(Math.random() * digits.length));
+          digit.style.left = `${left}px`;
+          digit.style.top = `${-20 * j}px`;
+          digit.style.animationDuration = `${duration}s`;
+          digit.style.animationDelay = `${delay + j * 0.2}s`;
+          digit.style.opacity = Math.random();
+          binaryRain.appendChild(digit);
+        }
+      }
+    }
+
+    // Update clock
+    function updateClock() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('en-US', {hour12: false});
+      document.querySelector('.status-item:nth-child(4)').innerHTML = 
+        `<i class="fas fa-clock"></i> ${timeString}`;
+    }
+    
+    // Simulate PII detection on the image
+    function detectPii() {
+      // Remove any existing highlights
+      document.querySelectorAll('.pii-highlight, .pii-label').forEach(el => el.remove());
+      
+      // Simulate finding sensitive data
+      const piiTypes = [
+        {type: 'Credit Card', color: '#ff2a6d', x: 100, y: 200, width: 150, height: 40},
+        {type: 'SSN', color: '#05d9e8', x: 300, y: 350, width: 120, height: 30},
+        {type: 'Email', color: '#00ff9d', x: 200, y: 500, width: 180, height: 30},
+        {type: 'Phone', color: '#ff9d00', x: 450, y: 150, width: 140, height: 35}
+      ];
+      
+      // Show analysis terminal
+      analysisTerminal.style.display = 'block';
+      terminalContent.innerHTML = '';
+      
+      // Add analysis results
+      terminalContent.innerHTML += `<div>SCAN INITIATED AT ${new Date().toLocaleTimeString()}</div>`;
+      terminalContent.innerHTML += `<div>DOCUMENT ANALYSIS IN PROGRESS...</div>`;
+      
+      setTimeout(() => {
+        terminalContent.innerHTML += `<div>DOCUMENT ANALYSIS COMPLETE</div>`;
+        terminalContent.innerHTML += `<div>PII DETECTION: <span>HIGH CONFIDENCE</span></div>`;
+        terminalContent.innerHTML += `<div>SENSITIVE DATA POINTS: <span>${piiTypes.length}</span></div>`;
+        terminalContent.innerHTML += `<div>RECOMMENDATION: <span>ENCRYPT DOCUMENT</span></div>`;
+        
+        // Create highlights
+        piiTypes.forEach(pii => {
+          const highlight = document.createElement('div');
+          highlight.className = 'pii-highlight';
+          highlight.style.left = `${pii.x}px`;
+          highlight.style.top = `${pii.y}px`;
+          highlight.style.width = `${pii.width}px`;
+          highlight.style.height = `${pii.height}px`;
+          highlight.style.borderColor = pii.color;
+          highlight.style.boxShadow = `0 0 10px ${pii.color}`;
+          scanArea.appendChild(highlight);
+          
+          const label = document.createElement('div');
+          label.className = 'pii-label';
+          label.style.left = `${pii.x}px`;
+          label.style.top = `${pii.y - 25}px`;
+          label.style.backgroundColor = pii.color;
+          label.textContent = pii.type;
+          scanArea.appendChild(label);
+        });
+        
+        resultText.textContent = `PII DETECTED: ${piiTypes.length} SENSITIVE DATA POINTS IDENTIFIED`;
+      }, 1500);
+    }
+
+    // Initialize
+    createBinaryRain();
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    imageUpload.addEventListener('change', function() {
+      const file = this.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, 800, 600);
+            preview.src = canvas.toDataURL('image/png');
+            preview.hidden = false;
+            resultText.textContent = 'IMAGE ACQUIRED. READY FOR PROCESSING.';
+            
+            // Clear any previous analysis
+            document.querySelectorAll('.pii-highlight, .pii-label').forEach(el => el.remove());
+            analysisTerminal.style.display = 'none';
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.hidden = true;
+        resultText.textContent = '';
+      }
+    });
+
+    sendBtn.addEventListener('click', () => {
+      const message = chatInput.value.trim();
+      if (message) {
+        resultText.textContent = `> QUERY: "${message}"`;
+        chatInput.value = '';
+        
+        spinner.style.display = 'block';
+        setTimeout(() => {
+          spinner.style.display = 'none';
+          const responses = [
+            `PII DETECTION ALGORITHMS ACTIVATED. SCANNING...`,
+            `ANALYSIS COMPLETE. 3 POTENTIAL PII ELEMENTS IDENTIFIED.`,
+            `WARNING: CREDIT CARD NUMBER DETECTED IN IMAGE.`,
+            `SCAN RESULTS: 85% CONFIDENCE OF SENSITIVE DATA PRESENCE.`,
+            `SYSTEM RESPONSE: ENCRYPTION RECOMMENDED FOR THIS DOCUMENT.`,
+            `AUDIT TRAIL: DOCUMENT CONTAINS MULTIPLE PERSONAL IDENTIFIERS`,
+            `SECURITY ALERT: UNPROTECTED PII DETECTED - IMMEDIATE ACTION REQUIRED`
+          ];
+          const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+          resultText.textContent = `> SYSTEM: ${randomResponse}`;
+        }, 1500);
+      }
+    });
+
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendBtn.click();
+      }
+    });
+
+    helpButton.addEventListener('click', () => {
+      resultText.innerHTML = `SYSTEM HELP:<br>
+      - UPLOAD: ACQUIRE IMAGE FOR PROCESSING<br>
+      - SCAN: DETECT PERSONALLY IDENTIFIABLE INFORMATION<br>
+      - ENCRYPT: OBFUSCATE SENSITIVE DATA<br>
+      - DECRYPT: REVEAL PROTECTED INFORMATION<br>
+      - DOWNLOAD: EXPORT PROCESSED FILE<br>
+      - CLEAR: RESET CURRENT SESSION`;
+    });
+
+    document.querySelector('.encrypt').addEventListener('click', () => {
+      if (!preview.src) {
+        resultText.textContent = "ERROR: NO IMAGE DETECTED.";
+        return;
+      }
+      spinner.style.display = 'block';
+      resultText.textContent = "INITIATING ENCRYPTION SEQUENCE...";
+      
+      setTimeout(() => {
+        spinner.style.display = 'none';
+        resultText.textContent = "ENCRYPTION COMPLETE. DATA SECURED.";
+        
+        // Add visual effect to preview
+        preview.style.filter = "hue-rotate(90deg)";
+        
+        // Add terminal message
+        terminalContent.innerHTML += `<div>ENCRYPTION PROCESS COMPLETED</div>`;
+        terminalContent.innerHTML += `<div>SECURITY LEVEL: <span>AES-256</span></div>`;
+        terminalContent.innerHTML += `<div>DATA INTEGRITY: <span>100%</span></div>`;
+      }, 2500);
+    });
+
+    document.querySelector('.decrypt').addEventListener('click', () => {
+      if (!preview.src) {
+        resultText.textContent = "ERROR: NO IMAGE DETECTED.";
+        return;
+      }
+      spinner.style.display = 'block';
+      resultText.textContent = "DECRYPTION IN PROGRESS...";
+      
+      setTimeout(() => {
+        spinner.style.display = 'none';
+        resultText.textContent = "DECRYPTION SUCCESSFUL. DATA EXPOSED.";
+        
+        // Remove visual effect
+        preview.style.filter = "";
+        
+        // Add terminal message
+        terminalContent.innerHTML += `<div>DECRYPTION PROCESS COMPLETED</div>`;
+        terminalContent.innerHTML += `<div>ACCESS GRANTED TO SENSITIVE DATA</div>`;
+      }, 2500);
+    });
+    
+    document.querySelector('.scan').addEventListener('click', () => {
+      if (!preview.src) {
+        resultText.textContent = "ERROR: NO IMAGE DETECTED.";
+        return;
+      }
+      
+      spinner.style.display = 'block';
+      resultText.textContent = "SCANNING FOR PERSONALLY IDENTIFIABLE INFORMATION...";
+      
+      setTimeout(() => {
+        spinner.style.display = 'none';
+        detectPii();
+      }, 2000);
+    });
+
+    document.querySelector('.download').addEventListener('click', () => {
+      if (!preview.src) {
+        resultText.textContent = "ERROR: NO DATA TO EXPORT.";
+        return;
+      }
+      
+      const link = document.createElement('a');
+      link.href = preview.src;
+      link.download = 'secured_data.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      resultText.textContent = "DOWNLOAD INITIATED. TRANSFER COMPLETE.";
+    });
+
+    document.querySelector('.clear').addEventListener('click', () => {
+      preview.src = '';
+      preview.hidden = true;
+      resultText.textContent = '';
+      imageUpload.value = '';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      resultText.textContent = "SYSTEM RESET. READY FOR NEW INPUT.";
+      document.querySelectorAll('.pii-highlight, .pii-label').forEach(el => el.remove());
+      analysisTerminal.style.display = 'none';
+      preview.style.filter = "";
+    });
+
+    document.querySelectorAll('.auth button').forEach(button => {
+      button.addEventListener('click', () => {
+        const action = button.textContent.includes('LOG IN') ? 'ACCESS GRANTED' : 'USER PROFILE CREATED';
+        resultText.textContent = `${action}. BIOMETRIC SCAN REQUIRED FOR FULL ACCESS.`;
+      });
+    });
+  </script>
+</body>
+</html>
