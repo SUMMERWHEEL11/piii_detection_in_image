@@ -153,7 +153,7 @@ https://drive.google.com/drive/folders/1R9a7o-aKL2mDHVG1KHogsuvxOgpZJTS2?usp=sha
 
 ## License
 
-This code is developed as a project for Post Graduate Diploma in Digital Engineering (PGDDE) under the guidance of Prof. Pradeep Sasmal, IIT Jodhpur.
+This code is developed as a project for Master of Technology in Data Engineering  under the guidance of Prof. Pradeep Sasmal, IIT Jodhpur.
 
 This project is licensed under the MIT License.
 
